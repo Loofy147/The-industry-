@@ -1,0 +1,12 @@
+{
+  "database": {
+    "host": "prod.db.internal",
+    "port": 5432
+  },
+  "api": {
+    "apiKey": null
+  },
+  "logging": {
+    "level": "warn"
+  }
+}

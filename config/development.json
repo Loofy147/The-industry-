@@ -1,0 +1,12 @@
+{
+  "database": {
+    "host": "localhost",
+    "port": 5432
+  },
+  "api": {
+    "apiKey": "DEV_API_KEY__DO_NOT_COMMIT"
+  },
+  "logging": {
+    "level": "debug"
+  }
+}
