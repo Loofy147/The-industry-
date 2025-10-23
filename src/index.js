@@ -16,6 +16,9 @@ const { StatelessWebServer } = require('./stateless_web_server');
 const { InadequateLoggingService } = require('./inadequate_logging_service');
 const { StructuredLogger, baseLogger } = require('./structured_logger');
 const { ObservableService } = require('./observable_service');
+const { HardcodedConfigService } = require('./hardcoded_config_service');
+const { config, loadConfig } = require('./config_loader');
+const { ConfigurableService } = require('./configurable_service');
 
 module.exports = {
   parseCsv,
@@ -48,4 +51,8 @@ module.exports = {
   StructuredLogger,
   baseLogger,
   ObservableService,
+  HardcodedConfigService,
+  config,
+  loadConfig,
+  ConfigurableService,
 };

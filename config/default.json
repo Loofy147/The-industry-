@@ -1,0 +1,8 @@
+{
+  "api": {
+    "timeout": 5000
+  },
+  "logging": {
+    "level": "info"
+  }
+}
