@@ -9,8 +9,7 @@ class ObservableService {
 
   processUserData(userId) {
     // We create a logger with context specific to this request.
-    // In a real web framework, this would be done by a middleware.
-    const requestLogger = this.logger.withContext({ userId });
+    const requestLogger = this.logger.child({ userId });
 
     requestLogger.info('User data processing started');
 

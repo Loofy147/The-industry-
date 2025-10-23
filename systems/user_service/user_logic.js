@@ -1,60 +1,57 @@
 const {
   User
 } = require('../../src/user_aggregate');
+const {
+  Tracer
+} = require('../../src/observability');
+const {
+  baseLogger
+} = require('../../src/structured_logger');
 
-/**
- * The UserLogic command handler is now fully decoupled from persistence.
- * Its only dependencies are the aggregate repository (to load state) and the
- * message bus (to publish events).
- */
+
 class UserLogic {
   constructor(userRepository, messageBus) {
     this.userRepository = userRepository;
     this.messageBus = messageBus;
+
+    // --- Instrumentation ---
+    // Wrap the public methods with the Tracer to automatically create spans.
+    this.registerUser = Tracer(this._registerUser.bind(this), 'UserLogic.registerUser');
+    this.deactivateUser = Tracer(this._deactivateUser.bind(this), 'UserLogic.deactivateUser');
   }
 
-  /**
-   * Handles the RegisterUser command.
-   * @param {string} email
-   * @param {string} password
-   * @returns {string} The ID of the newly created user.
-   */
-  async registerUser(email, password) {
-    // 1. Create a new User aggregate instance.
+  async _registerUser(email, password) {
+    const logger = baseLogger.child({
+      operationName: 'UserLogic.registerUser'
+    });
+    logger.info('Registering new user.');
     const user = new User();
-
-    // 2. Execute business logic to produce an event.
     const event = user.registerUser({
       email,
       password
     });
-
-    // 3. Publish the event. The EventStore is listening and will handle persistence.
     this.messageBus.publish(event.type, event);
-
-    // 4. Return the aggregate ID.
+    logger.info('User registration event published.');
     return event.aggregateId;
   }
 
-  /**
-   * Handles the DeactivateUser command.
-   * @param {string} userId
-   */
-  async deactivateUser(userId) {
-    // 1. Load the aggregate from history.
+  async _deactivateUser(userId) {
+    const logger = baseLogger.child({
+      operationName: 'UserLogic.deactivateUser'
+    });
+    logger.info('Deactivating user.');
     const user = await this.userRepository.findById(userId);
     if (!user) {
+      logger.error('User not found.');
       throw new Error('User not found.');
     }
-
-    // 2. Execute business logic to produce an event.
     const event = user.deactivateUser({});
     if (!event) {
-      return; // No event produced.
+      logger.warn('User already deactivated.');
+      return;
     }
-
-    // 3. Publish the event.
     this.messageBus.publish(event.type, event);
+    logger.info('User deactivation event published.');
   }
 }
 

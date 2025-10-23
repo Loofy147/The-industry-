@@ -1,5 +1,6 @@
 const WebSocket = require('ws');
-const server = require('../server'); // Our frontend server
+// server.js is no longer imported or managed by the test.
+// const server = require('../server');
 const { WebSocketGateway } = require('../src/websocket_gateway');
 const { MessageBus } = require('../src/message_bus');
 const { UserLogic } = require('../systems/user_service/user_logic');
@@ -17,6 +18,7 @@ describe('Full-Stack, End-to-End Reactivity Test', () => {
     const eventStore = new EventStore(messageBus);
     const userRepository = new UserRepository(eventStore);
     userLogic = new UserLogic(userRepository, messageBus);
+    // The test will use the same port as the main server.
     wsGateway = new WebSocketGateway(messageBus, 8080);
 
     // Connect the components.
@@ -37,28 +39,20 @@ describe('Full-Stack, End-to-End Reactivity Test', () => {
     const wsClient = new WebSocket('ws://localhost:8080');
 
     wsClient.on('open', async () => {
-      // The connection is open, now we can proceed.
-
-      // 2. The client sets up a listener for incoming messages.
       wsClient.on('message', (data) => {
         const event = JSON.parse(data);
-
-        // 4. Assert that the received event is correct.
         expect(event.type).toBe('UserRegistered');
         expect(event.data.email).toBe(email);
-
-        // Clean up and finish the test.
         wsClient.close();
         done();
       });
 
-      // 3. Dispatch a command to the backend. This simulates a user action.
-      // In a real app, this would be an HTTP POST request. Here, we call the command handler directly.
+      // 3. Dispatch a command to the backend.
       await userLogic.registerUser(email, password);
     });
 
     wsClient.on('error', (err) => {
-      done(err); // Fail the test if the connection fails
+      done(err);
     });
   });
 });

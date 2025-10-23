@@ -1,4 +1,6 @@
 const { emailService } = require('./email_service');
+const { Tracer } = require('../../src/observability');
+const { baseLogger } = require('../../src/structured_logger');
 
 class NotificationHandler {
   constructor(messageBus) {
@@ -9,20 +11,24 @@ class NotificationHandler {
    * Subscribes to relevant events from the message bus.
    */
   subscribe() {
-    this.messageBus.subscribe('UserRegistered', this.handleUserRegistered.bind(this));
+    // The handler is now wrapped with the Tracer.
+    const tracedHandler = Tracer(this._handleUserRegistered.bind(this), 'NotificationHandler.handleUserRegistered');
+    this.messageBus.subscribe('UserRegistered', tracedHandler);
   }
 
   /**
    * Handles the UserRegistered event.
    * @param {object} event The UserRegistered event.
    */
-  async handleUserRegistered(event) {
-    console.log(`NotificationHandler: Received UserRegistered event for ${event.data.email}`);
+  async _handleUserRegistered(event) {
+    const logger = baseLogger.child({ operationName: 'NotificationHandler.handleUserRegistered' });
+    logger.info(`Received UserRegistered event for ${event.data.email}`);
     try {
       await emailService.sendWelcomeEmail(event.data.email);
+      logger.info('Welcome email sent successfully.');
     } catch (error) {
-      console.error('Failed to send welcome email:', error);
-      // In a real system, we would implement a retry mechanism or a dead-letter queue.
+      logger.error({ error: error.message }, 'Failed to send welcome email.');
+      throw error;
     }
   }
 }
