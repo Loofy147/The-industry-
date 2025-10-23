@@ -8,6 +8,7 @@ class User {
     this.email = null;
     this.password = null; // In a real app, this would be a hash
     this.isActive = false;
+    this.role = 'customer'; // Default role
     this.version = -1; // Used for optimistic concurrency control
   }
 
@@ -19,6 +20,7 @@ class User {
       this.email = event.data.email;
       this.password = event.data.password;
       this.isActive = true;
+      this.role = event.data.role || 'customer'; // Set role from event
     } else if (event.type === 'UserDeactivated') {
       this.isActive = false;
     }
@@ -44,6 +46,7 @@ class User {
     return this._createEvent('UserRegistered', {
       email: command.email,
       password: command.password,
+      role: command.role,
     });
   }
 

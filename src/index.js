@@ -28,6 +28,7 @@ const { NotificationHandler } = require('../systems/notification_service/notific
 const { MessageBus, messageBus } = require('./message_bus');
 const { WebSocketGateway } = require('./websocket_gateway');
 const { CorrelationContext, getContext, setContext, Tracer } = require('./observability');
+const { RulesEngine } = require('./rules_engine');
 
 module.exports = {
   parseCsv,
@@ -78,4 +79,5 @@ module.exports = {
   getContext,
   setContext,
   Tracer,
+  RulesEngine,
 };
