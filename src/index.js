@@ -13,6 +13,9 @@ const { DecoupledReportGenerator, MySqlDatabase, FileSystemLogger, CloudLogger }
 const { StatefulWebServer } = require('./stateful_web_server');
 const { StateManager, stateManager, clearExternalStore } = require('./state_manager');
 const { StatelessWebServer } = require('./stateless_web_server');
+const { InadequateLoggingService } = require('./inadequate_logging_service');
+const { StructuredLogger, baseLogger } = require('./structured_logger');
+const { ObservableService } = require('./observable_service');
 
 module.exports = {
   parseCsv,
@@ -41,4 +44,8 @@ module.exports = {
   stateManager,
   clearExternalStore,
   StatelessWebServer,
+  InadequateLoggingService,
+  StructuredLogger,
+  baseLogger,
+  ObservableService,
 };
