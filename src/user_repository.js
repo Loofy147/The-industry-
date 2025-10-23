@@ -1,30 +1,50 @@
-/**
- * This module adheres to the Single Responsibility Principle.
- * Its only responsibility is data persistence for user records.
- * It has only one reason to change: if the database schema or technology changes.
- */
+const {
+  User
+} = require('./user_aggregate');
+const {
+  eventStore
+} = require('./event_store');
 
+/**
+ * The UserRepository is now an "Aggregate Repository".
+ * Its responsibility is to load aggregates from their event history
+ * and save new events back to the event store.
+ * It is a bridge between the domain model (the aggregate) and the persistence layer (the event store).
+ */
 class UserRepository {
-  constructor(dbClient) {
-    this.db = dbClient;
+  constructor(eventStore) {
+    this.eventStore = eventStore;
   }
 
-  async createUser(email, password) {
-    // The logic for how to format and save a user lives here.
-    const user = { email, password }; // In a real app, you'd hash the password
-    return this.db.save(user);
+  /**
+   * Saves an event to the event store.
+   * In a real system, this would happen within a transaction to ensure consistency.
+   * @param {object} event The event to save.
+   */
+  async save(event) {
+    this.eventStore.appendToStream(event.aggregateId, event);
+  }
+
+  /**
+   * Loads a User aggregate from its event history.
+   * @param {string} aggregateId The ID of the user to load.
+   * @returns {User} The hydrated User aggregate.
+   */
+  async findById(aggregateId) {
+    const events = this.eventStore.readStream(aggregateId);
+    if (events.length === 0) {
+      return null;
+    }
+
+    const user = new User();
+    events.forEach(event => user.apply(event));
+    return user;
   }
 }
 
-// Stand-in for a real database client for demonstration.
-const fakeDbClient = {
-  save: async (user) => {
-    console.log(`Saving user ${user.email} to the database.`);
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return { id: 1, ...user };
-  }
+const userRepository = new UserRepository(eventStore);
+
+module.exports = {
+  UserRepository,
+  userRepository
 };
-
-const userRepository = new UserRepository(fakeDbClient);
-
-module.exports = { UserRepository, userRepository };

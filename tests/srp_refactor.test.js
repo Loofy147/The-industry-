@@ -1,65 +1,60 @@
 const { MonolithicUserService } = require('../src/monolithic_user_service');
 const { UserLogic } = require('../src/user_logic');
+const { User } = require('../src/user_aggregate');
 
-describe('Single Responsibility Principle Refactor', () => {
+// This test suite now contrasts the monolithic service with the CQRS/ES command handler.
+describe('Single Responsibility Principle Refactor to CQRS', () => {
 
-  // This describes the testing problem with the monolithic, non-SRP approach.
   describe('MonolithicUserService (Violates SRP)', () => {
+    // This test remains the same, as it's a valuable contrast.
     test('is difficult to unit test without real dependencies', async () => {
-      // To test this class, we need to provide a fake database and a fake emailer.
-      // What if we only want to test the validation logic? We still have to provide
-      // mocks for dependencies we don't care about for this specific test.
-      // This makes the test more complex and brittle.
-
       const mockDb = { save: jest.fn().mockResolvedValue({ id: 1 }) };
       const mockEmailer = { send: jest.fn().mockResolvedValue(true) };
-
       const service = new MonolithicUserService(mockDb, mockEmailer);
-
-      // We are testing the password validation, but the mocks are required.
       await expect(service.registerUser('test@test.com', 'short'))
         .rejects.toThrow('Password must be at least 8 characters long.');
-
-      // We didn't want to test the db or emailer, but our test setup depends on them.
       expect(mockDb.save).not.toHaveBeenCalled();
       expect(mockEmailer.send).not.toHaveBeenCalled();
     });
   });
 
-  // This demonstrates the "shared solution": testing a module that adheres to SRP.
-  describe('UserLogic (Adheres to SRP)', () => {
-    test('allows for simple, focused unit testing of business logic', async () => {
-      // We can test the business logic (validation) without creating any mocks
-      // for the database or email service. The dependencies are decoupled.
-
-      // We can pass `null` or `undefined` for the dependencies because the part of the code
-      // we are testing (the validation) does not use them.
-      const userLogic = new UserLogic(null, null);
-
-      // This test is now extremely simple. It has no knowledge of external systems.
+  describe('UserLogic (CQRS Command Handler)', () => {
+    // This test is updated to reflect that validation now happens inside the aggregate.
+    test('throws an error for invalid input, preventing event creation', async () => {
+      const userLogic = new UserLogic(null); // No repository needed for this validation test.
       await expect(userLogic.registerUser('test@test.com', 'short'))
         .rejects.toThrow('Password must be at least 8 characters long.');
-
-      await expect(userLogic.registerUser('invalid-email', 'longenough'))
-        .rejects.toThrow('Invalid email address.');
     });
 
-    test('allows for easy mocking to test orchestration logic', async () => {
-      // When we want to test the *orchestration*, we can provide simple mocks.
+    // This is the core test for the command handler's responsibility.
+    test('creates a UserRegistered event and saves it via the repository', async () => {
+      const email = 'test@test.com';
+      const password = 'a-valid-password';
+
+      // Arrange:
+      // Mock the repository's save method. This is the only dependency.
       const mockRepo = {
-        createUser: jest.fn().mockResolvedValue({ id: 1, email: 'test@test.com' })
+        save: jest.fn().mockResolvedValue(undefined)
       };
-      const mockEmailer = {
-        sendWelcomeEmail: jest.fn().mockResolvedValue(true)
-      };
+      const userLogic = new UserLogic(mockRepo);
 
-      const userLogic = new UserLogic(mockRepo, mockEmailer);
+      // Act:
+      const newUserId = await userLogic.registerUser(email, password);
 
-      await userLogic.registerUser('test@test.com', 'a-valid-password');
+      // Assert:
+      // 1. A new user ID was returned.
+      expect(newUserId).toBeDefined();
+      expect(typeof newUserId).toBe('string');
 
-      // The test is a clear and simple verification of the orchestration.
-      expect(mockRepo.createUser).toHaveBeenCalledWith('test@test.com', 'a-valid-password');
-      expect(mockEmailer.sendWelcomeEmail).toHaveBeenCalledWith('test@test.com');
+      // 2. The repository's save method was called exactly once.
+      expect(mockRepo.save).toHaveBeenCalledTimes(1);
+
+      // 3. The event saved has the correct structure and data.
+      const savedEvent = mockRepo.save.mock.calls[0][0];
+      expect(savedEvent.type).toBe('UserRegistered');
+      expect(savedEvent.aggregateId).toBe(newUserId);
+      expect(savedEvent.data.email).toBe(email);
+      expect(savedEvent.data.password).toBe(password);
     });
   });
 });

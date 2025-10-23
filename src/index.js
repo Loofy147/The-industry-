@@ -19,6 +19,11 @@ const { ObservableService } = require('./observable_service');
 const { HardcodedConfigService } = require('./hardcoded_config_service');
 const { config, loadConfig } = require('./config_loader');
 const { ConfigurableService } = require('./configurable_service');
+const { SagaOrchestrator, sagaOrchestrator } = require('./saga_orchestrator');
+const { USER_REGISTRATION_SAGA } = require('./user_registration_saga');
+const { EventStore, eventStore } = require('./event_store');
+const { User } = require('./user_aggregate');
+const { UserReadModelProjector } = require('./user_read_model_projector');
 
 module.exports = {
   parseCsv,
@@ -55,4 +60,11 @@ module.exports = {
   config,
   loadConfig,
   ConfigurableService,
+  SagaOrchestrator,
+  sagaOrchestrator,
+  USER_REGISTRATION_SAGA,
+  EventStore,
+  eventStore,
+  User,
+  UserReadModelProjector,
 };
