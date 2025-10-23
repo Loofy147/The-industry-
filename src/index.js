@@ -26,6 +26,7 @@ const { User } = require('./user_aggregate');
 const { UserReadModelProjector } = require('./user_read_model_projector');
 const { NotificationHandler } = require('../systems/notification_service/notification_handler');
 const { MessageBus, messageBus } = require('./message_bus');
+const { WebSocketGateway } = require('./websocket_gateway');
 
 module.exports = {
   parseCsv,
@@ -71,4 +72,5 @@ module.exports = {
   NotificationHandler,
   MessageBus,
   messageBus,
+  WebSocketGateway,
 };

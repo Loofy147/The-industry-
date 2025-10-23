@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
+    "start": "node server.js",
     "test": "jest tests/"
   },
   "repository": {
@@ -20,6 +21,7 @@
   "homepage": "https://github.com/Loofy147/The-industry-#readme",
   "dependencies": {
     "jest": "^30.2.0",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "ws": "^8.18.3"
   }
 }
