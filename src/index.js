@@ -10,6 +10,9 @@ const { UserRepository, userRepository } = require('./user_repository');
 const { UserLogic } = require('./user_logic');
 const { TightlyCoupledReportGenerator } = require('./tightly_coupled_report_generator');
 const { DecoupledReportGenerator, MySqlDatabase, FileSystemLogger, CloudLogger } = require('./decoupled_report_generator');
+const { StatefulWebServer } = require('./stateful_web_server');
+const { StateManager, stateManager, clearExternalStore } = require('./state_manager');
+const { StatelessWebServer } = require('./stateless_web_server');
 
 module.exports = {
   parseCsv,
@@ -33,4 +36,9 @@ module.exports = {
   MySqlDatabase,
   FileSystemLogger,
   CloudLogger,
+  StatefulWebServer,
+  StateManager,
+  stateManager,
+  clearExternalStore,
+  StatelessWebServer,
 };
