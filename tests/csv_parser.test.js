@@ -1,4 +1,4 @@
-const { parseCsv } = require('./csv_parser');
+const { parseCsv } = require('../src/csv_parser');
 
 describe('parseCsv', () => {
   test('should parse a simple CSV', () => {
