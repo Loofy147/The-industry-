@@ -1,28 +1,15 @@
 const {
   User
 } = require('./user_aggregate');
-const {
-  eventStore
-} = require('./event_store');
-
 /**
  * The UserRepository is now an "Aggregate Repository".
- * Its responsibility is to load aggregates from their event history
- * and save new events back to the event store.
- * It is a bridge between the domain model (the aggregate) and the persistence layer (the event store).
+ * Its *only* responsibility is to load aggregates from their event history.
+ * It no longer saves events; that is handled by publishing to the message bus
+ * and having the EventStore subscribe to it.
  */
 class UserRepository {
   constructor(eventStore) {
     this.eventStore = eventStore;
-  }
-
-  /**
-   * Saves an event to the event store.
-   * In a real system, this would happen within a transaction to ensure consistency.
-   * @param {object} event The event to save.
-   */
-  async save(event) {
-    this.eventStore.appendToStream(event.aggregateId, event);
   }
 
   /**
@@ -42,9 +29,7 @@ class UserRepository {
   }
 }
 
-const userRepository = new UserRepository(eventStore);
-
+// The repository is no longer a singleton, as it depends on the event store.
 module.exports = {
   UserRepository,
-  userRepository
 };

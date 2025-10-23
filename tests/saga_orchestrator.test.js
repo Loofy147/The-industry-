@@ -1,27 +1,20 @@
 const { sagaOrchestrator } = require('../src/saga_orchestrator');
-const { emailService } = require('../src/email_service');
-const { UserLogic } = require('../src/user_logic');
-
-// Mock the UserLogic module *before* it's imported by any other module.
-jest.mock('../src/user_logic');
-
-// Now, when we require the saga, it will get the mocked version of UserLogic.
-// It will create a singleton instance of the mock, which we can then access.
-const { USER_REGISTRATION_SAGA } = require('../src/user_registration_saga');
-
+const { emailService } = require('../systems/notification_service/email_service');
+const { UserLogic } = require('../systems/user_service/user_logic');
+const { defineUserRegistrationSaga, USER_REGISTRATION_SAGA } = require('../src/user_registration_saga');
 
 describe('SagaOrchestrator (CQRS-Compliant)', () => {
-  // The user_registration_saga module creates a singleton instance of the mocked UserLogic
-  // when it is first required. We need to get a stable reference to that specific instance
-  // to configure its behavior and assert that it was called correctly.
-  const mockUserLogicInstance = UserLogic.mock.instances[0];
+  let mockUserLogic;
 
   beforeEach(() => {
-    // Before each test, clear the history of the mock methods on the singleton instance.
-    mockUserLogicInstance.registerUser.mockClear();
-    mockUserLogicInstance.deactivateUser.mockClear();
-    // also restore any other spies (e.g., on emailService)
-    jest.restoreAllMocks();
+    // Before each test, create a fresh mock of the UserLogic.
+    mockUserLogic = {
+      registerUser: jest.fn(),
+      deactivateUser: jest.fn(),
+    };
+
+    // Define the saga with the mock dependency.
+    defineUserRegistrationSaga(mockUserLogic);
   });
 
   it('should successfully execute by dispatching commands', async () => {
@@ -29,8 +22,8 @@ describe('SagaOrchestrator (CQRS-Compliant)', () => {
     const password = 'password123';
     const newUserId = 'user-123';
 
-    // Arrange: Configure the mock methods on our singleton instance.
-    mockUserLogicInstance.registerUser.mockResolvedValue(newUserId);
+    // Arrange: Configure the mock to simulate success.
+    mockUserLogic.registerUser.mockResolvedValue(newUserId);
     const sendEmailSpy = jest.spyOn(emailService, 'sendWelcomeEmail').mockResolvedValue(undefined);
 
     // Act: Execute the saga.
@@ -39,10 +32,10 @@ describe('SagaOrchestrator (CQRS-Compliant)', () => {
       password: password,
     });
 
-    // Assert: Verify the correct methods were called on the singleton instance.
-    expect(mockUserLogicInstance.registerUser).toHaveBeenCalledWith(email, password);
+    // Assert: Verify the correct methods were called on the mock.
+    expect(mockUserLogic.registerUser).toHaveBeenCalledWith(email, password);
     expect(sendEmailSpy).toHaveBeenCalledWith(email);
-    expect(mockUserLogicInstance.deactivateUser).not.toHaveBeenCalled();
+    expect(mockUserLogic.deactivateUser).not.toHaveBeenCalled();
   });
 
   it('should compensate by dispatching a compensating command if a step fails', async () => {
@@ -50,8 +43,8 @@ describe('SagaOrchestrator (CQRS-Compliant)', () => {
     const password = 'password123';
     const newUserId = 'user-456';
 
-    // Arrange: Configure the mock methods on our singleton instance.
-    mockUserLogicInstance.registerUser.mockResolvedValue(newUserId);
+    // Arrange: Configure the mocks for the failure scenario.
+    mockUserLogic.registerUser.mockResolvedValue(newUserId);
     jest.spyOn(emailService, 'sendWelcomeEmail').mockImplementation(async () => {
       throw new Error('Email service is down');
     });
@@ -61,11 +54,12 @@ describe('SagaOrchestrator (CQRS-Compliant)', () => {
       sagaOrchestrator.execute(USER_REGISTRATION_SAGA, {
         username: email,
         password: password,
+        userId: newUserId,
       })
     ).rejects.toThrow('Saga "USER_REGISTRATION_SAGA" failed and was rolled back.');
 
     // Assert:
-    expect(mockUserLogicInstance.registerUser).toHaveBeenCalledWith(email, password);
-    expect(mockUserLogicInstance.deactivateUser).toHaveBeenCalledWith(newUserId);
+    expect(mockUserLogic.registerUser).toHaveBeenCalledWith(email, password);
+    expect(mockUserLogic.deactivateUser).toHaveBeenCalledWith(newUserId);
   });
 });

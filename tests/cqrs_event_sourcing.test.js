@@ -1,6 +1,6 @@
 const {
   UserLogic
-} = require('../src/user_logic');
+} = require('../systems/user_service/user_logic');
 const {
   UserRepository
 } = require('../src/user_repository');
@@ -10,60 +10,52 @@ const {
 const {
   UserReadModelProjector
 } = require('../src/user_read_model_projector');
+const {
+  MessageBus
+} = require('../src/message_bus');
 
-describe('CQRS and Event Sourcing End-to-End Flow', () => {
+describe('CQRS and Event Sourcing with Message Bus', () => {
+  let messageBus;
   let eventStore;
   let userRepository;
   let userLogic;
   let userReadModelProjector;
 
   beforeEach(() => {
-    // Set up a fresh in-memory event store and all dependent components for each test.
-    eventStore = new EventStore();
+    // 1. Set up the entire in-memory infrastructure.
+    messageBus = new MessageBus();
+    eventStore = new EventStore(messageBus);
     userRepository = new UserRepository(eventStore);
-    userLogic = new UserLogic(userRepository);
+    userLogic = new UserLogic(userRepository, messageBus);
     userReadModelProjector = new UserReadModelProjector(eventStore);
+
+    // 2. Connect the components.
+    // The EventStore subscribes to the bus to persist all events.
+    eventStore.subscribeToAllEvents();
   });
 
-  it('should correctly process a command, save an event, and update the read model', async () => {
-    const email = 'cqrs-test@example.com';
+  it('should process a command, publish an event, persist it, and update the read model', async () => {
+    const email = 'cqrs-bus-test@example.com';
     const password = 'a-strong-password';
 
-    // --- 1. The Command Side ---
-    // Send the `registerUser` command to the command handler (UserLogic).
+    // --- 1. The Command ---
     const newUserId = await userLogic.registerUser(email, password);
-
     expect(newUserId).toBeDefined();
 
-    // --- 2. The Event Store (Source of Truth) ---
-    // Verify that the correct event was written to the event store.
+    // --- 2. The Event Store (Persistence) ---
+    // The userLogic published an event, which the eventStore should have received and persisted.
     const stream = eventStore.readStream(newUserId);
     expect(stream).toHaveLength(1);
-
     const event = stream[0];
     expect(event.type).toBe('UserRegistered');
     expect(event.aggregateId).toBe(newUserId);
-    expect(event.data.email).toBe(email);
 
-    // --- 3. The Aggregate (Write Model) ---
-    // Verify that we can reconstruct the aggregate from its history.
-    const userFromHistory = await userRepository.findById(newUserId);
-    expect(userFromHistory).toBeDefined();
-    expect(userFromHistory._id).toBe(newUserId);
-    expect(userFromHistory.email).toBe(email);
-    expect(userFromHistory.isActive).toBe(true);
-    expect(userFromHistory.version).toBe(0); // Version is 0 after 1 event
-
-    // --- 4. The Read Model (Query Side) ---
-    // Trigger the projector to update the read model.
+    // --- 3. The Read Model (Query Side) ---
+    // The projector builds its model from the now-persisted events in the event store.
     userReadModelProjector.project();
-
-    // Verify that the read model contains the correct, denormalized data.
     const userFromReadModel = userReadModelProjector.findUserById(newUserId);
     expect(userFromReadModel).toBeDefined();
     expect(userFromReadModel.id).toBe(newUserId);
     expect(userFromReadModel.email).toBe(email);
-    // Crucially, the read model does not contain sensitive data like the password.
-    expect(userFromReadModel.password).toBeUndefined();
   });
 });

@@ -1,14 +1,16 @@
 const {
   User
-} = require('./user_aggregate');
+} = require('../../src/user_aggregate');
+
 /**
- * In a CQRS system, this module would be considered a "Command Handler".
- * Its responsibility is to receive a command, find the correct aggregate,
- * execute the business logic on the aggregate, and save the resulting events.
+ * The UserLogic command handler is now fully decoupled from persistence.
+ * Its only dependencies are the aggregate repository (to load state) and the
+ * message bus (to publish events).
  */
 class UserLogic {
-  constructor(userRepository) {
+  constructor(userRepository, messageBus) {
     this.userRepository = userRepository;
+    this.messageBus = messageBus;
   }
 
   /**
@@ -21,17 +23,16 @@ class UserLogic {
     // 1. Create a new User aggregate instance.
     const user = new User();
 
-    // 2. Execute the business logic (command) on the aggregate.
-    // This validates the input and produces an event if successful.
+    // 2. Execute business logic to produce an event.
     const event = user.registerUser({
       email,
       password
     });
 
-    // 3. Save the new event to the event store via the repository.
-    await this.userRepository.save(event);
+    // 3. Publish the event. The EventStore is listening and will handle persistence.
+    this.messageBus.publish(event.type, event);
 
-    // 4. Return the aggregate ID to the caller.
+    // 4. Return the aggregate ID.
     return event.aggregateId;
   }
 
@@ -46,15 +47,14 @@ class UserLogic {
       throw new Error('User not found.');
     }
 
-    // 2. Execute the business logic on the aggregate.
+    // 2. Execute business logic to produce an event.
     const event = user.deactivateUser({});
     if (!event) {
-      // The command resulted in no event (e.g., user was already deactivated).
-      return;
+      return; // No event produced.
     }
 
-    // 3. Save the new event.
-    await this.userRepository.save(event);
+    // 3. Publish the event.
+    this.messageBus.publish(event.type, event);
   }
 }
 

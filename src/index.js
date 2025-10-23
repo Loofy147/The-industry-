@@ -5,9 +5,9 @@ const { throttle, memoizeAsync } = require('./async_utils');
 const { validateAndClean } = require('./data_validator');
 const { makeIdempotent, clearIdempotencyStore } = require('./idempotency_middleware');
 const { MonolithicUserService, monolithicUserService } = require('./monolithic_user_service');
-const { EmailService, emailService } = require('./email_service');
+const { EmailService, emailService } = require('../systems/notification_service/email_service');
 const { UserRepository, userRepository } = require('./user_repository');
-const { UserLogic } = require('./user_logic');
+const { UserLogic } = require('../systems/user_service/user_logic');
 const { TightlyCoupledReportGenerator } = require('./tightly_coupled_report_generator');
 const { DecoupledReportGenerator, MySqlDatabase, FileSystemLogger, CloudLogger } = require('./decoupled_report_generator');
 const { StatefulWebServer } = require('./stateful_web_server');
@@ -21,9 +21,11 @@ const { config, loadConfig } = require('./config_loader');
 const { ConfigurableService } = require('./configurable_service');
 const { SagaOrchestrator, sagaOrchestrator } = require('./saga_orchestrator');
 const { USER_REGISTRATION_SAGA } = require('./user_registration_saga');
-const { EventStore, eventStore } = require('./event_store');
+const { EventStore } = require('./event_store'); // No longer exporting a singleton instance
 const { User } = require('./user_aggregate');
 const { UserReadModelProjector } = require('./user_read_model_projector');
+const { NotificationHandler } = require('../systems/notification_service/notification_handler');
+const { MessageBus, messageBus } = require('./message_bus');
 
 module.exports = {
   parseCsv,
@@ -63,8 +65,10 @@ module.exports = {
   SagaOrchestrator,
   sagaOrchestrator,
   USER_REGISTRATION_SAGA,
-  EventStore,
-  eventStore,
+  EventStore, // Exporting the class only
   User,
   UserReadModelProjector,
+  NotificationHandler,
+  MessageBus,
+  messageBus,
 };

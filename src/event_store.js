@@ -1,22 +1,36 @@
+/**
+ * The EventStore now acts as a durable log for events that pass through the Message Bus.
+ * It subscribes to all event types to build a complete history.
+ */
 class EventStore {
-  constructor() {
-    // In-memory store for events, grouped by aggregate ID.
-    // In a real application, this would be a dedicated event store database like EventStoreDB or a table in a relational/NoSQL database.
+  constructor(messageBus) {
     this.streams = new Map();
+    this.messageBus = messageBus;
   }
 
   /**
-   * Appends an event to the stream for a given aggregate.
-   * @param {string} aggregateId The ID of the aggregate.
-   * @param {object} event The event object to append.
+   * Subscribes to all relevant topics on the message bus.
+   * This is a simplified approach. A real system might have a more robust
+   * mechanism for discovering all event types.
    */
-  appendToStream(aggregateId, event) {
+  subscribeToAllEvents() {
+    // For this example, we'll explicitly subscribe to the events we know about.
+    this.messageBus.subscribe('UserRegistered', this._handleEvent.bind(this));
+    this.messageBus.subscribe('UserDeactivated', this._handleEvent.bind(this));
+  }
+
+  /**
+   * Private handler that appends any received event to the appropriate stream.
+   * @param {object} event The event to append.
+   */
+  _handleEvent(event) {
+    const aggregateId = event.aggregateId;
     if (!this.streams.has(aggregateId)) {
       this.streams.set(aggregateId, []);
     }
     const stream = this.streams.get(aggregateId);
     stream.push(event);
-    console.log(`Event appended to stream ${aggregateId}:`, event);
+    console.log(`EventStore: Persisted event for stream ${aggregateId}:`, event.type);
   }
 
   /**
@@ -41,9 +55,8 @@ class EventStore {
   }
 }
 
-const eventStore = new EventStore();
-
+// The eventStore is no longer a standalone singleton, but depends on the bus.
+// We will manage its instantiation in a central setup file or test.
 module.exports = {
   EventStore,
-  eventStore,
 };
