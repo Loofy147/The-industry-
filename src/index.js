@@ -8,6 +8,8 @@ const { MonolithicUserService, monolithicUserService } = require('./monolithic_u
 const { EmailService, emailService } = require('./email_service');
 const { UserRepository, userRepository } = require('./user_repository');
 const { UserLogic } = require('./user_logic');
+const { TightlyCoupledReportGenerator } = require('./tightly_coupled_report_generator');
+const { DecoupledReportGenerator, MySqlDatabase, FileSystemLogger, CloudLogger } = require('./decoupled_report_generator');
 
 module.exports = {
   parseCsv,
@@ -26,4 +28,9 @@ module.exports = {
   UserRepository,
   userRepository,
   UserLogic,
+  TightlyCoupledReportGenerator,
+  DecoupledReportGenerator,
+  MySqlDatabase,
+  FileSystemLogger,
+  CloudLogger,
 };
