@@ -2,7 +2,7 @@
   "name": "app",
   "version": "1.0.0",
   "description": "",
-  "main": "iban_validator.js",
+  "main": "csv_parser.js",
   "scripts": {
     "test": "jest"
   },
