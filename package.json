@@ -25,5 +25,8 @@
     "jest": "^30.2.0",
     "uuid": "^8.3.2",
     "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "get-port-cjs": "^6.1.3"
   }
 }

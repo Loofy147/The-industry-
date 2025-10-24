@@ -36,10 +36,17 @@ class WebSocketGateway {
    * Stops the WebSocket server.
    */
   stop() {
-    if (this.wss) {
-      this.wss.close();
-      console.log('WebSocketGateway stopped.');
-    }
+    return new Promise((resolve) => {
+      if (this.wss) {
+        this.wss.close(() => {
+          console.log('WebSocketGateway stopped.');
+          this.wss = null;
+          resolve();
+        });
+      } else {
+        resolve();
+      }
+    });
   }
 
   /**

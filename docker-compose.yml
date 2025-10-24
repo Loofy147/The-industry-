@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  # The main application service
+  app:
+    # Build the image from the Dockerfile in the current directory
+    build: .
+    # Use an .env file for local development to inject environment variables
+    env_file:
+      - .env
+    # Map the container ports to the host machine
+    ports:
+      - "${PORT}:${PORT}"
+      - "${WEBSOCKET_PORT}:${WEBSOCKET_PORT}"
+    # This service depends on the message broker being started first
+    depends_on:
+      - message-broker
+
+  # A production-grade message broker (Redis Pub/Sub)
+  message-broker:
+    image: "redis:7-alpine"
+    ports:
+      # Expose the Redis port to the host for debugging if needed
+      - "6379:6379"

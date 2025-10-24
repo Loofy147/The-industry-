@@ -14,9 +14,9 @@ class EventStore {
    * mechanism for discovering all event types.
    */
   subscribeToAllEvents() {
-    // For this example, we'll explicitly subscribe to the events we know about.
-    this.messageBus.subscribe('UserRegistered', this._handleEvent.bind(this));
-    this.messageBus.subscribe('UserDeactivated', this._handleEvent.bind(this));
+    // This is a simplified approach. A real system might have a more robust
+    // mechanism for discovering all event types.
+    this.messageBus.subscribe('*', this._handleEvent.bind(this));
   }
 
   /**

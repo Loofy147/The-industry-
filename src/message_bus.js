@@ -26,26 +26,26 @@ class MessageBus {
 
     console.log(`MessageBus: Publishing event to topic "${topic}"`, message.payload);
 
-    if (this.subscriptions.has(topic)) {
-      this.subscriptions.get(topic).forEach(({ handler, schemaVersion }) => {
-        // --- Schema Validation ---
-        const { valid, errors } = schemaValidator.validate(topic, schemaVersion, message.payload);
-        if (!valid) {
-          console.error(`MessageBus: Invalid event for topic "${topic}". Moving to DLQ.`, { errors });
-          this.deadLetterQueue.push({ message, errors });
-          return; // Do not process invalid message
-        }
-        // --- End Validation ---
+    const handlers = (this.subscriptions.get(topic) || []).concat(this.subscriptions.get('*') || []);
 
-        const parentContext = getContext();
-        const messageContext = message.context ? new CorrelationContext(message.context.traceId, message.context.spanId) : null;
-        setContext(messageContext);
+    handlers.forEach(({ handler, schemaVersion }) => {
+      // --- Schema Validation ---
+      const { valid, errors } = schemaValidator.validate(topic, schemaVersion, message.payload);
+      if (!valid) {
+        console.error(`MessageBus: Invalid event for topic "${topic}". Moving to DLQ.`, { errors });
+        this.deadLetterQueue.push({ message, errors });
+        return; // Do not process invalid message
+      }
+      // --- End Validation ---
 
-        handler(message.payload);
+      const parentContext = getContext();
+      const messageContext = message.context ? new CorrelationContext(message.context.traceId, message.context.spanId) : null;
+      setContext(messageContext);
 
-        setContext(parentContext);
-      });
-    }
+      handler(message.payload);
+
+      setContext(parentContext);
+    });
   }
 
   send(queueName, command) {
@@ -76,9 +76,6 @@ class MessageBus {
   }
 }
 
-const messageBus = new MessageBus();
-
 module.exports = {
   MessageBus,
-  messageBus,
 };

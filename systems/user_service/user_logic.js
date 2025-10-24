@@ -73,7 +73,7 @@ class UserLogic {
     const event = user.deactivateUser({});
     if (!event) {
       logger.warn('User already deactivated.');
-      return;
+      return null;
     }
     this.messageBus.publish(event.type, event);
     logger.info('User deactivation event published.');
