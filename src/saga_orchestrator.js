@@ -1,8 +1,19 @@
+/**
+ * A simple saga orchestrator for managing distributed transactions.
+ */
 class SagaOrchestrator {
+  /**
+   * Creates a new SagaOrchestrator instance.
+   */
   constructor() {
     this.sagas = {};
   }
 
+  /**
+   * Defines a new saga.
+   * @param {string} sagaName The name of the saga.
+   * @param {Array<object>} steps The steps of the saga.
+   */
   define(sagaName, steps) {
     this.sagas[sagaName] = {
       name: sagaName,
@@ -10,6 +21,12 @@ class SagaOrchestrator {
     };
   }
 
+  /**
+   * Executes a saga.
+   * @param {string} sagaName The name of the saga to execute.
+   * @param {object} initialContext The initial context for the saga.
+   * @returns {Promise<object>} A promise that resolves with the final context.
+   */
   async execute(sagaName, initialContext = {}) {
     const saga = this.sagas[sagaName];
     if (!saga) {

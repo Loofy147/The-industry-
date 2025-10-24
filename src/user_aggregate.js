@@ -2,7 +2,13 @@ const {
   v4: uuidv4
 } = require('uuid');
 
+/**
+ * The User aggregate, representing a user in the system.
+ */
 class User {
+  /**
+   * Creates a new User instance.
+   */
   constructor() {
     this._id = null;
     this.email = null;
@@ -12,8 +18,10 @@ class User {
     this.version = -1; // Used for optimistic concurrency control
   }
 
-  // --- State Hydration ---
-  // This is the core of event sourcing: the aggregate's state is built by applying events.
+  /**
+   * Applies an event to the aggregate, updating its state.
+   * @param {object} event The event to apply.
+   */
   apply(event) {
     if (event.type === 'UserRegistered') {
       this._id = event.aggregateId;
@@ -23,6 +31,8 @@ class User {
       this.role = event.data.role || 'customer'; // Set role from event
     } else if (event.type === 'UserDeactivated') {
       this.isActive = false;
+    } else if (event.type === 'UserUpdated') {
+      // For testing snapshots, we'll just increment the version
     }
     this.version++;
   }
@@ -66,8 +76,37 @@ class User {
       type,
       aggregateId,
       timestamp: new Date().toISOString(),
+      version: this.version + 1,
       data,
     };
+  }
+
+  /**
+   * Returns the current state of the aggregate for snapshotting.
+   * @returns {object} The aggregate's state.
+   */
+  getState() {
+    return {
+      _id: this._id,
+      email: this.email,
+      password: this.password,
+      isActive: this.isActive,
+      role: this.role,
+      version: this.version,
+    };
+  }
+
+  /**
+   * Loads the aggregate's state from a snapshot.
+   * @param {object} snapshot The snapshot data.
+   */
+  loadFromSnapshot(snapshot) {
+    this._id = snapshot.state._id;
+    this.email = snapshot.state.email;
+    this.password = snapshot.state.password;
+    this.isActive = snapshot.state.isActive;
+    this.role = snapshot.state.role;
+    this.version = snapshot.version;
   }
 }
 

@@ -28,6 +28,7 @@ describe('Multi-System Communication via Message Bus', () => {
     // 1. Create the infrastructure.
     messageBus = new MessageBus();
     eventStore = new EventStore(messageBus);
+    eventStore.clear(); // Clear the event store before each test
     userRepository = new UserRepository(eventStore);
 
     // 2. Instantiate the services.

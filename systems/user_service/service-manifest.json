@@ -1,0 +1,17 @@
+{
+  "name": "user_service",
+  "description": "Manages user registration, authentication, and profile information.",
+  "publishes": [
+    {
+      "event": "UserRegistered",
+      "schema": "UserRegistered",
+      "version": 1
+    },
+    {
+      "event": "UserDeactivated",
+      "schema": "UserDeactivated",
+      "version": 1
+    }
+  ],
+  "subscribes": []
+}

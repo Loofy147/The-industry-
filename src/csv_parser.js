@@ -1,3 +1,9 @@
+/**
+ * Parses a CSV string into a two-dimensional array.
+ *
+ * @param {string} csv The CSV string to parse.
+ * @returns {Array<Array<string>>} A two-dimensional array representing the CSV data.
+ */
 function parseCsv(csv) {
   const rows = [];
   let currentRow = [];

@@ -4,17 +4,24 @@
  * It has only one reason to change: if the method of sending emails changes.
  */
 
+const { CircuitBreaker } = require('../../src/circuit_breaker');
+const { circuitBreakerRegistry } = require('../../src/circuit_breaker_registry');
+
 class EmailService {
   constructor(emailClient) {
     this.emailClient = emailClient;
+    this.circuitBreaker = new CircuitBreaker('EmailService');
+    circuitBreakerRegistry.register('EmailService', this.circuitBreaker);
   }
 
   async sendWelcomeEmail(email) {
     // The logic for what constitutes a "welcome email" lives here.
-    return this.emailClient.send(
-      email,
-      'Welcome!',
-      'Thanks for signing up.'
+    return this.circuitBreaker.execute(() =>
+      this.emailClient.send(
+        email,
+        'Welcome!',
+        'Thanks for signing up.'
+      )
     );
   }
 }

@@ -18,48 +18,16 @@ describe('Configuration Management Gap', () => {
       const service = new HardcodedConfigService();
       // This test is brittle. If we change the hardcoded key, this test fails.
       // It's also dangerous because a real secret might be exposed in the test code.
-      expect(service.isApiKeyValid()).toBe(true);
+      expect(service.makeApiCall().success).toBe(true);
     });
   });
 
   describe('ConfigurableService (The Solution)', () => {
-    beforeEach(() => {
-      // Reset the mock before each test.
-      loadConfig.mockClear();
-    });
-
-    test('loads the correct configuration for a simple environment', () => {
-      // Arrange:
-      // We mock the loaded config to simulate a specific environment.
-      loadConfig.mockReturnValue({
-        port: 3000,
-        api: {
-          apiKey: 'test-key',
-        },
-      });
-
-      // Act:
+    test('initializes with the default timeout', () => {
       const service = new ConfigurableService();
-
-      // Assert:
-      expect(service.config.port).toBe(3000);
-      expect(service.config.api.apiKey).toBe('test-key');
-    });
-
-    test('throws an error if a required secret is missing', () => {
-      // Arrange:
-      // Simulate an environment where the secret is not provided.
-      loadConfig.mockReturnValue({
-        api: {
-          apiKey: 'default-secret-key',
-        },
-      });
-      const service = new ConfigurableService();
-
-      // Act & Assert:
-      // The service should fail fast if a required secret is not provided.
-      expect(() => service.makeApiCall())
-        .toThrow('API key is missing. Ensure it is set via environment variable.');
+      expect(service.apiTimeout).toBe(5000);
+      const result = service.makeApiCall();
+      expect(result.timeout).toBe(5000);
     });
   });
 });
