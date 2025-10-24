@@ -18,7 +18,7 @@ describe('Configuration Management Gap', () => {
       const service = new HardcodedConfigService();
       // This test is brittle. If we change the hardcoded key, this test fails.
       // It's also dangerous because a real secret might be exposed in the test code.
-      expect(service.isApiKeyValid()).toBe(true);
+      expect(service.makeApiCall().success).toBe(true);
     });
   });
 

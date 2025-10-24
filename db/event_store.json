@@ -1,13 +1,37 @@
 {
   "streams": {
-    "812a02a5-61e7-4ad8-a815-353f4cb093ba": [
+    "95b0d837-97f7-4d96-9e97-f2985c829186": [
       {
         "type": "UserRegistered",
-        "aggregateId": "812a02a5-61e7-4ad8-a815-353f4cb093ba",
-        "timestamp": "2025-10-24T03:02:09.126Z",
+        "aggregateId": "95b0d837-97f7-4d96-9e97-f2985c829186",
+        "timestamp": "2025-10-24T03:11:55.594Z",
         "data": {
           "email": "multi-system-test@example.com",
           "password": "a-valid-password",
+          "role": "customer"
+        }
+      }
+    ],
+    "71fb5dce-a76b-49ad-9a16-8c19ce999d63": [
+      {
+        "type": "UserRegistered",
+        "aggregateId": "71fb5dce-a76b-49ad-9a16-8c19ce999d63",
+        "timestamp": "2025-10-24T03:11:56.137Z",
+        "data": {
+          "email": "full-stack-test@example.com",
+          "password": "a-secure-password",
+          "role": "customer"
+        }
+      }
+    ],
+    "d404a02b-0021-4fc8-9a1b-5db655ff0d2c": [
+      {
+        "type": "UserRegistered",
+        "aggregateId": "d404a02b-0021-4fc8-9a1b-5db655ff0d2c",
+        "timestamp": "2025-10-24T03:11:56.322Z",
+        "data": {
+          "email": "cqrs-bus-test@example.com",
+          "password": "a-strong-password",
           "role": "customer"
         }
       }
