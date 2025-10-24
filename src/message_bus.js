@@ -3,13 +3,25 @@ const { schemaValidator } = require('./schema_validator');
 require('../schemas/user_registered'); // Ensure schemas are registered
 require('../schemas/user_deactivated'); // Ensure schemas are registered
 
+/**
+ * A simple in-memory message bus for pub/sub and command-based communication.
+ */
 class MessageBus {
+  /**
+   * Creates a new MessageBus instance.
+   */
   constructor() {
     this.subscriptions = new Map();
     this.queues = new Map();
     this.deadLetterQueue = []; // For messages that fail validation
   }
 
+  /**
+   * Subscribes a handler to a topic.
+   * @param {string} topic The topic to subscribe to.
+   * @param {Function} handler The handler function.
+   * @param {number} schemaVersion The schema version the handler supports.
+   */
   subscribe(topic, handler, schemaVersion = 1) { // Consumers can specify which version they support
     if (!this.subscriptions.has(topic)) {
       this.subscriptions.set(topic, []);
@@ -17,6 +29,11 @@ class MessageBus {
     this.subscriptions.get(topic).push({ handler, schemaVersion });
   }
 
+  /**
+   * Publishes an event to a topic.
+   * @param {string} topic The topic to publish to.
+   * @param {object} event The event to publish.
+   */
   publish(topic, event) {
     const context = getContext();
     const message = {

@@ -2,7 +2,13 @@ const {
   v4: uuidv4
 } = require('uuid');
 
+/**
+ * The User aggregate, representing a user in the system.
+ */
 class User {
+  /**
+   * Creates a new User instance.
+   */
   constructor() {
     this._id = null;
     this.email = null;
@@ -12,8 +18,10 @@ class User {
     this.version = -1; // Used for optimistic concurrency control
   }
 
-  // --- State Hydration ---
-  // This is the core of event sourcing: the aggregate's state is built by applying events.
+  /**
+   * Applies an event to the aggregate, updating its state.
+   * @param {object} event The event to apply.
+   */
   apply(event) {
     if (event.type === 'UserRegistered') {
       this._id = event.aggregateId;

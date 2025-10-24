@@ -1,0 +1,16 @@
+{
+  "streams": {
+    "812a02a5-61e7-4ad8-a815-353f4cb093ba": [
+      {
+        "type": "UserRegistered",
+        "aggregateId": "812a02a5-61e7-4ad8-a815-353f4cb093ba",
+        "timestamp": "2025-10-24T03:02:09.126Z",
+        "data": {
+          "email": "multi-system-test@example.com",
+          "password": "a-valid-password",
+          "role": "customer"
+        }
+      }
+    ]
+  }
+}
