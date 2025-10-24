@@ -12,6 +12,7 @@ const { WebSocketGateway } = require('./src/websocket_gateway');
 const { messageBus } = require('./src/message_bus');
 const { circuitBreakerRegistry } = require('./src/circuit_breaker_registry');
 const { configService } = require('./src/config_service');
+const { serviceRegistry } = require('./src/service_registry');
 const eventStore = new EventStore(messageBus);
 eventStore.subscribeToAllEvents();
 const wsGateway = new WebSocketGateway(messageBus, config.websocketPort);
@@ -61,6 +62,14 @@ const server = http.createServer(async (req, res) => {
     if (req.url === '/control/message-bus/dlq' && req.method === 'GET') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       return res.end(JSON.stringify(messageBus.deadLetterQueue));
+    }
+
+    // GET /control/services
+    if (req.url === '/control/services' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      // Convert Map to an array of objects for JSON serialization
+      const services = Array.from(serviceRegistry.getAll().values());
+      return res.end(JSON.stringify(services));
     }
 
     res.writeHead(404, { 'Content-Type': 'application/json' });

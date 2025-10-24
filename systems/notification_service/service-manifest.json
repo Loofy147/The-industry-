@@ -1,0 +1,12 @@
+{
+  "name": "notification_service",
+  "description": "Handles sending notifications, such as welcome emails.",
+  "publishes": [],
+  "subscribes": [
+    {
+      "event": "UserRegistered",
+      "schema": "UserRegistered",
+      "version": 1
+    }
+  ]
+}
