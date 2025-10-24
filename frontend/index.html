@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reactive Frontend</title>
+  <style>
+    body { font-family: sans-serif; padding: 2em; background-color: #f4f4f9; color: #333; }
+    h1 { color: #444; }
+    #user-list { border: 1px solid #ddd; background-color: #fff; padding: 1em; border-radius: 5px; }
+    .user { padding: 0.5em; border-bottom: 1px solid #eee; }
+    .user:last-child { border-bottom: none; }
+  </style>
+</head>
+<body>
+  <h1>User List (Real-Time)</h1>
+  <div id="user-list">
+    <!-- User components will be rendered here -->
+  </div>
+
+  <script src="/store.js"></script>
+  <script src="/components.js"></script>
+  <script>
+    // --- Application Bootstrapping ---
+
+    // 1. Establish WebSocket connection
+    const socket = new WebSocket('ws://localhost:8080');
+
+    socket.onopen = () => {
+      console.log('WebSocket connection established.');
+    };
+
+    socket.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      console.log('Received event from WebSocket:', message);
+      // 2. Dispatch the received event to the central store
+      store.dispatch({ type: 'HANDLE_EVENT', payload: message });
+    };
+
+    socket.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    };
+
+  </script>
+</body>
+</html>

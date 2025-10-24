@@ -1,29 +1,33 @@
 /**
- * This module provides the powerful, shared solution: a StructuredLogger.
- * It outputs logs as JSON and manages the propagation of context.
+ * The StructuredLogger is now context-aware. It automatically includes
+ * the current correlation context in every log message.
  */
 class StructuredLogger {
-  constructor(context = {}, outputStream = process.stdout) {
-    this.context = context;
-    this.outputStream = outputStream; // Allows for easy testing by redirecting output
+  constructor(getContext, baseContext = {}, outputStream = process.stdout) {
+    this.getContext = getContext;
+    this.baseContext = baseContext;
+    this.outputStream = outputStream;
   }
 
-  // Creates a "child" logger with additional, persistent context.
-  withContext(extraContext) {
-    const newContext = { ...this.context, ...extraContext };
-    return new StructuredLogger(newContext, this.outputStream);
+  child(extraContext) {
+    const newContext = { ...this.baseContext, ...extraContext };
+    return new StructuredLogger(this.getContext, newContext, this.outputStream);
   }
 
-  // The core logging function.
   _log(level, message, data = {}) {
+    const correlationContext = this.getContext(); // Dynamically get the current context.
+
     const logEntry = {
       timestamp: new Date().toISOString(),
       level,
-      ...this.context, // All persistent context is automatically included
+      ...this.baseContext,
+      ...(correlationContext && {
+        traceId: correlationContext.traceId,
+        spanId: correlationContext.spanId,
+      }),
       message,
       ...data,
     };
-    // In a real app, you'd add more logic for handling different environments (e.g., pretty-printing in dev)
     this.outputStream.write(JSON.stringify(logEntry) + '\n');
   }
 
@@ -36,12 +40,14 @@ class StructuredLogger {
   }
 
   error(message, data) {
-    // In a real app, the `data` for an error would likely include the stack trace.
     this._log('error', message, data);
   }
 }
 
-// Export a base instance of the logger.
-const baseLogger = new StructuredLogger();
+// The baseLogger now needs the getContext function to be injected.
+// We will do this in a central composition root.
+const { getContext } = require('./observability');
+const baseLogger = new StructuredLogger(getContext);
+
 
 module.exports = { StructuredLogger, baseLogger };

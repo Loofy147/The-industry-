@@ -1,30 +1,35 @@
+const {
+  User
+} = require('./user_aggregate');
 /**
- * This module adheres to the Single Responsibility Principle.
- * Its only responsibility is data persistence for user records.
- * It has only one reason to change: if the database schema or technology changes.
+ * The UserRepository is now an "Aggregate Repository".
+ * Its *only* responsibility is to load aggregates from their event history.
+ * It no longer saves events; that is handled by publishing to the message bus
+ * and having the EventStore subscribe to it.
  */
-
 class UserRepository {
-  constructor(dbClient) {
-    this.db = dbClient;
+  constructor(eventStore) {
+    this.eventStore = eventStore;
   }
 
-  async createUser(email, password) {
-    // The logic for how to format and save a user lives here.
-    const user = { email, password }; // In a real app, you'd hash the password
-    return this.db.save(user);
+  /**
+   * Loads a User aggregate from its event history.
+   * @param {string} aggregateId The ID of the user to load.
+   * @returns {User} The hydrated User aggregate.
+   */
+  async findById(aggregateId) {
+    const events = this.eventStore.readStream(aggregateId);
+    if (events.length === 0) {
+      return null;
+    }
+
+    const user = new User();
+    events.forEach(event => user.apply(event));
+    return user;
   }
 }
 
-// Stand-in for a real database client for demonstration.
-const fakeDbClient = {
-  save: async (user) => {
-    console.log(`Saving user ${user.email} to the database.`);
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return { id: 1, ...user };
-  }
+// The repository is no longer a singleton, as it depends on the event store.
+module.exports = {
+  UserRepository,
 };
-
-const userRepository = new UserRepository(fakeDbClient);
-
-module.exports = { UserRepository, userRepository };
