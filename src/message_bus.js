@@ -1,24 +1,22 @@
 const { getContext, setContext, CorrelationContext } = require('./observability');
+const { schemaValidator } = require('./schema_validator');
+require('../schemas/user_registered'); // Ensure schemas are registered
+require('../schemas/user_deactivated'); // Ensure schemas are registered
 
-/**
- * An in-memory implementation of a Message Bus that propagates a correlation context.
- */
 class MessageBus {
   constructor() {
     this.subscriptions = new Map();
     this.queues = new Map();
+    this.deadLetterQueue = []; // For messages that fail validation
   }
 
-  subscribe(topic, handler) {
+  subscribe(topic, handler, schemaVersion = 1) { // Consumers can specify which version they support
     if (!this.subscriptions.has(topic)) {
       this.subscriptions.set(topic, []);
     }
-    this.subscriptions.get(topic).push(handler);
+    this.subscriptions.get(topic).push({ handler, schemaVersion });
   }
 
-  /**
-   * Publishes an event, attaching the current correlation context to the message.
-   */
   publish(topic, event) {
     const context = getContext();
     const message = {
@@ -29,23 +27,27 @@ class MessageBus {
     console.log(`MessageBus: Publishing event to topic "${topic}"`, message.payload);
 
     if (this.subscriptions.has(topic)) {
-      this.subscriptions.get(topic).forEach(handler => {
-        // Restore the context before invoking the handler.
+      this.subscriptions.get(topic).forEach(({ handler, schemaVersion }) => {
+        // --- Schema Validation ---
+        const { valid, errors } = schemaValidator.validate(topic, schemaVersion, message.payload);
+        if (!valid) {
+          console.error(`MessageBus: Invalid event for topic "${topic}". Moving to DLQ.`, { errors });
+          this.deadLetterQueue.push({ message, errors });
+          return; // Do not process invalid message
+        }
+        // --- End Validation ---
+
         const parentContext = getContext();
         const messageContext = message.context ? new CorrelationContext(message.context.traceId, message.context.spanId) : null;
         setContext(messageContext);
 
-        handler(message.payload); // Pass the original event payload to the handler
+        handler(message.payload);
 
-        // Restore the previous context.
         setContext(parentContext);
       });
     }
   }
 
-  /**
-   * Sends a command, attaching the current correlation context.
-   */
   send(queueName, command) {
     const context = getContext();
     const message = {
@@ -64,15 +66,10 @@ class MessageBus {
       const queue = this.queues.get(queueName);
       while (queue.length > 0) {
         const message = queue.shift();
-
-        // Restore the context.
         const parentContext = getContext();
         const messageContext = message.context ? new CorrelationContext(message.context.traceId, message.context.spanId) : null;
         setContext(messageContext);
-
         handler(message.payload);
-
-        // Restore the previous context.
         setContext(parentContext);
       }
     }

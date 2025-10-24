@@ -29,6 +29,8 @@ const { MessageBus, messageBus } = require('./message_bus');
 const { WebSocketGateway } = require('./websocket_gateway');
 const { CorrelationContext, getContext, setContext, Tracer } = require('./observability');
 const { RulesEngine } = require('./rules_engine');
+const { SchemaRegistry, schemaRegistry } = require('./schema_registry');
+const { SchemaValidator, schemaValidator } = require('./schema_validator');
 
 module.exports = {
   parseCsv,
@@ -80,4 +82,8 @@ module.exports = {
   setContext,
   Tracer,
   RulesEngine,
+  SchemaRegistry,
+  schemaRegistry,
+  SchemaValidator,
+  schemaValidator,
 };
