@@ -40,6 +40,31 @@ The application is organized into the following directories:
 - `tests`: Contains the automated tests for the application.
 - `GAP_REPORTS`: Contains reports on identified gaps and areas for improvement.
 
+## Monitoring and Management
+
+The application exposes several endpoints for monitoring and runtime management.
+
+### Control API (`/control`)
+
+The Control API provides a set of endpoints for introspecting and managing the system at runtime.
+
+-   `GET /control/config`: Returns the current application configuration.
+-   `PATCH /control/config`: Dynamically updates the configuration.
+-   `GET /control/circuit-breakers`: Returns the status of all registered circuit breakers.
+-   `GET /control/message-bus/dlq`: Returns the contents of the dead letter queue.
+-   `GET /control/services`: Returns the discovered system architecture from the service registry.
+-   `POST /control/projectors/:name/replay`: Triggers a replay of events for a given projector.
+
+### Metrics (`/metrics`)
+
+The application exposes a `/metrics` endpoint that provides real-time performance and health data in the Prometheus exposition format. This data can be scraped by a Prometheus server and used for monitoring, alerting, and dashboarding.
+
+Key metrics include:
+
+-   `http_requests_total`: The total number of HTTP requests, labeled by method, path, and status code.
+-   `message_bus_events_published_total`: The total number of events published to the message bus, labeled by topic.
+-   `circuit_breaker_state`: The current state of each circuit breaker (0=CLOSED, 1=OPEN, 2=HALF_OPEN), labeled by name.
+
 ## Usage
 
 The application can be used to perform a variety of tasks, including:

@@ -1,7 +1,11 @@
 const { getContext, setContext, CorrelationContext } = require('./observability');
 const { schemaValidator } = require('./schema_validator');
+const { metricsService } = require('./metrics_service');
 require('../schemas/user_registered'); // Ensure schemas are registered
 require('../schemas/user_deactivated'); // Ensure schemas are registered
+
+// Register message bus metrics
+metricsService.registerCounter('message_bus_events_published_total', 'Total number of events published to the message bus.');
 
 /**
  * A simple in-memory message bus for pub/sub and command-based communication.
@@ -42,6 +46,7 @@ class MessageBus {
     };
 
     console.log(`MessageBus: Publishing event to topic "${topic}"`, message.payload);
+    metricsService.incrementCounter('message_bus_events_published_total', { topic });
 
     const handlers = (this.subscriptions.get(topic) || []).concat(this.subscriptions.get('*') || []);
 

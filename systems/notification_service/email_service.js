@@ -10,7 +10,7 @@ const { circuitBreakerRegistry } = require('../../src/circuit_breaker_registry')
 class EmailService {
   constructor(emailClient) {
     this.emailClient = emailClient;
-    this.circuitBreaker = new CircuitBreaker();
+    this.circuitBreaker = new CircuitBreaker('EmailService');
     circuitBreakerRegistry.register('EmailService', this.circuitBreaker);
   }
 

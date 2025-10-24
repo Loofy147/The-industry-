@@ -16,6 +16,11 @@ const { serviceRegistry } = require('./src/service_registry');
 const { ProjectorManager } = require('./src/projector_manager');
 const { UserReadModelProjector } = require('./src/user_read_model_projector');
 const { eventStore } = require('./src/event_store');
+const { metricsService } = require('./src/metrics_service');
+
+// Register HTTP metrics
+metricsService.registerCounter('http_requests_total', 'Total number of HTTP requests.');
+
 const projectorManager = new ProjectorManager(eventStore);
 const userReadModelProjector = new UserReadModelProjector(eventStore, projectorManager);
 eventStore.subscribeToAllEvents();
@@ -31,6 +36,9 @@ const start = () => {
 // --- End Backend Setup ---
 
 const server = http.createServer(async (req, res) => {
+  // Instrument every request
+  metricsService.incrementCounter('http_requests_total', { method: req.method, path: req.url });
+
   // --- Control API ---
   if (req.url.startsWith('/control')) {
     // GET /control/config
@@ -92,6 +100,12 @@ const server = http.createServer(async (req, res) => {
 
     res.writeHead(404, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ error: 'Control endpoint not found' }));
+  }
+
+  // --- Metrics Endpoint ---
+  if (req.url === '/metrics') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    return res.end(metricsService.render());
   }
 
   // --- Health Check Endpoint ---

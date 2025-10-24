@@ -2,6 +2,7 @@ const request = require('supertest');
 const { server } = require('../server');
 const { configService } = require('../src/config_service');
 const { circuitBreakerRegistry } = require('../src/circuit_breaker_registry');
+const { State } = require('../src/circuit_breaker');
 const { EmailService, emailService } = require('../systems/notification_service/email_service');
 
 describe('Control API', () => {
@@ -59,7 +60,7 @@ describe('Control API', () => {
       // Assert
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('EmailService');
-      expect(response.body.EmailService.state).toBe('OPEN');
+      expect(response.body.EmailService.state).toBe(State.OPEN);
 
       // Cleanup
       emailService.emailClient.send = originalSend;

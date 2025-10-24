@@ -5,7 +5,7 @@ describe('CircuitBreaker', () => {
   let mockAsyncFunction;
 
   beforeEach(() => {
-    circuitBreaker = new CircuitBreaker({
+    circuitBreaker = new CircuitBreaker('TestBreaker', {
       failureThreshold: 2,
       successThreshold: 1,
       timeout: 200, // Use a short timeout for testing
@@ -39,7 +39,7 @@ describe('CircuitBreaker', () => {
     await expect(circuitBreaker.execute(mockAsyncFunction)).rejects.toThrow('service failure');
 
     // Attempt another call
-    await expect(circuitBreaker.execute(mockAsyncFunction)).rejects.toThrow('CircuitBreaker is OPEN');
+    await expect(circuitBreaker.execute(mockAsyncFunction)).rejects.toThrow("CircuitBreaker 'TestBreaker' is OPEN. Operation rejected.");
   });
 
   it('should transition back to CLOSED from HALF_OPEN after a success', async () => {
