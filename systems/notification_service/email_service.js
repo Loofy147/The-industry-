@@ -5,11 +5,13 @@
  */
 
 const { CircuitBreaker } = require('../../src/circuit_breaker');
+const { circuitBreakerRegistry } = require('../../src/circuit_breaker_registry');
 
 class EmailService {
   constructor(emailClient) {
     this.emailClient = emailClient;
     this.circuitBreaker = new CircuitBreaker();
+    circuitBreakerRegistry.register('EmailService', this.circuitBreaker);
   }
 
   async sendWelcomeEmail(email) {

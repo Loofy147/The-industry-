@@ -93,6 +93,9 @@ class MessageBus {
   }
 }
 
+const messageBus = new MessageBus();
+
 module.exports = {
   MessageBus,
+  messageBus,
 };

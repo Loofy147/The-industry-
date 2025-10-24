@@ -6,11 +6,12 @@ const { config } = require('./src/config_loader');
 // --- Production Backend Setup ---
 // In a real production environment, we would initialize our services here,
 // potentially connecting to a real message broker based on the config.
-const { MessageBus } = require('./src/message_bus');
 const { EventStore } = require('./src/event_store');
 const { WebSocketGateway } = require('./src/websocket_gateway');
 // For now, we'll continue to use the in-memory bus for simplicity.
-const messageBus = new MessageBus();
+const { messageBus } = require('./src/message_bus');
+const { circuitBreakerRegistry } = require('./src/circuit_breaker_registry');
+const { configService } = require('./src/config_service');
 const eventStore = new EventStore(messageBus);
 eventStore.subscribeToAllEvents();
 const wsGateway = new WebSocketGateway(messageBus, config.websocketPort);
@@ -24,7 +25,48 @@ const start = () => {
 };
 // --- End Backend Setup ---
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
+  // --- Control API ---
+  if (req.url.startsWith('/control')) {
+    // GET /control/config
+    if (req.url === '/control/config' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(configService.get()));
+    }
+
+    // PATCH /control/config
+    if (req.url === '/control/config' && req.method === 'PATCH') {
+      let body = '';
+      req.on('data', chunk => { body += chunk.toString(); });
+      return req.on('end', () => {
+        try {
+          const updates = JSON.parse(body);
+          configService.update(updates);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ status: 'ok', updated: updates }));
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Invalid JSON body' }));
+        }
+      });
+    }
+
+    // GET /control/circuit-breakers
+    if (req.url === '/control/circuit-breakers' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(circuitBreakerRegistry.getAllStatus()));
+    }
+
+    // GET /control/message-bus/dlq
+    if (req.url === '/control/message-bus/dlq' && req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(messageBus.deadLetterQueue));
+    }
+
+    res.writeHead(404, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ error: 'Control endpoint not found' }));
+  }
+
   // --- Health Check Endpoint ---
   if (req.url === '/healthz') {
     res.writeHead(200, { 'Content-Type': 'application/json' });
