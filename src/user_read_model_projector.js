@@ -6,19 +6,21 @@
  * store that is optimized for fast reads.
  */
 class UserReadModelProjector {
-  constructor(eventStore) {
+  constructor(eventStore, projectorManager) {
     this.eventStore = eventStore;
     // In a real application, this would be a separate read database (e.g., Redis, Elasticsearch, or a SQL table).
     this.readModel = new Map();
+
+    if (projectorManager) {
+      projectorManager.register('UserReadModel', this);
+    }
   }
 
   /**
-   * Rebuilds the entire read model from the event stream.
-   * This is useful for initialization or if the model schema changes.
+   * Rebuilds the read model from a given stream of events.
+   * @param {Array<object>} events The events to project.
    */
-  project() {
-    this.readModel.clear();
-    const events = this.eventStore.readAllEvents();
+  project(events) {
     events.forEach(event => this._apply(event));
   }
 
@@ -44,6 +46,14 @@ class UserReadModelProjector {
    */
   findUserById(userId) {
     return this.readModel.get(userId);
+  }
+
+  /**
+   * Clears the read model.
+   */
+  clear() {
+    this.readModel.clear();
+    console.log('UserReadModelProjector: Read model cleared.');
   }
 }
 

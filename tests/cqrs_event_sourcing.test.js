@@ -5,33 +5,30 @@ const {
   UserRepository
 } = require('../src/user_repository');
 const {
-  EventStore
+  eventStore
 } = require('../src/event_store');
 const {
   UserReadModelProjector
 } = require('../src/user_read_model_projector');
 const {
-  MessageBus
+  messageBus
 } = require('../src/message_bus');
 
 describe('CQRS and Event Sourcing with Message Bus', () => {
-  let messageBus;
-  let eventStore;
   let userRepository;
   let userLogic;
   let userReadModelProjector;
 
   beforeEach(() => {
     // 1. Set up the entire in-memory infrastructure.
-    messageBus = new MessageBus();
-    eventStore = new EventStore(messageBus);
     userRepository = new UserRepository(eventStore);
     userLogic = new UserLogic(userRepository, messageBus);
-    userReadModelProjector = new UserReadModelProjector(eventStore);
+    userReadModelProjector = new UserReadModelProjector(eventStore, { register: () => {} });
 
     // 2. Connect the components.
     // The EventStore subscribes to the bus to persist all events.
     eventStore.subscribeToAllEvents();
+    eventStore.clear();
   });
 
   it('should process a command, publish an event, persist it, and update the read model', async () => {
@@ -52,7 +49,7 @@ describe('CQRS and Event Sourcing with Message Bus', () => {
 
     // --- 3. The Read Model (Query Side) ---
     // The projector builds its model from the now-persisted events in the event store.
-    userReadModelProjector.project();
+    userReadModelProjector.project(eventStore.readAllEvents());
     const userFromReadModel = userReadModelProjector.findUserById(newUserId);
     expect(userFromReadModel).toBeDefined();
     expect(userFromReadModel.id).toBe(newUserId);

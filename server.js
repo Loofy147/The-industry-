@@ -13,7 +13,11 @@ const { messageBus } = require('./src/message_bus');
 const { circuitBreakerRegistry } = require('./src/circuit_breaker_registry');
 const { configService } = require('./src/config_service');
 const { serviceRegistry } = require('./src/service_registry');
-const eventStore = new EventStore(messageBus);
+const { ProjectorManager } = require('./src/projector_manager');
+const { UserReadModelProjector } = require('./src/user_read_model_projector');
+const { eventStore } = require('./src/event_store');
+const projectorManager = new ProjectorManager(eventStore);
+const userReadModelProjector = new UserReadModelProjector(eventStore, projectorManager);
 eventStore.subscribeToAllEvents();
 const wsGateway = new WebSocketGateway(messageBus, config.websocketPort);
 
@@ -72,6 +76,20 @@ const server = http.createServer(async (req, res) => {
       return res.end(JSON.stringify(services));
     }
 
+    // POST /control/projectors/:name/replay
+    const replayMatch = req.url.match(/^\/control\/projectors\/(.+)\/replay$/);
+    if (replayMatch && req.method === 'POST') {
+      const projectorName = replayMatch[1];
+      try {
+        await projectorManager.replay(projectorName);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ status: 'ok', message: `Replay started for ${projectorName}` }));
+      } catch (error) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ error: error.message }));
+      }
+    }
+
     res.writeHead(404, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ error: 'Control endpoint not found' }));
   }
@@ -110,4 +128,4 @@ const server = http.createServer(async (req, res) => {
   });
 });
 
-module.exports = { server, start };
+module.exports = { server, start, userReadModelProjector };

@@ -4,14 +4,15 @@ const { FileDatabase } = require('./file_database');
  * The EventStore now acts as a durable log for events that pass through the Message Bus.
  * It subscribes to all event types to build a complete history.
  */
+const { messageBus } = require('./message_bus');
+
 class EventStore {
   /**
    * Creates an instance of EventStore.
    * @param {MessageBus} messageBus The message bus to subscribe to.
-   * @param {string} [dbPath='db/event_store.json'] The path to the database file.
    */
-  constructor(messageBus, dbPath = 'db/event_store.json') {
-    this.db = new FileDatabase(dbPath);
+  constructor(messageBus) {
+    this.db = new FileDatabase('db/event_store.json');
     this.messageBus = messageBus;
   }
 
@@ -75,8 +76,9 @@ class EventStore {
   }
 }
 
-// The eventStore is no longer a standalone singleton, but depends on the bus.
-// We will manage its instantiation in a central setup file or test.
+const eventStore = new EventStore(messageBus);
+
 module.exports = {
   EventStore,
+  eventStore,
 };
