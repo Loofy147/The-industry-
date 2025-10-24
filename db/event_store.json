@@ -1,10 +1,10 @@
 {
   "streams": {
-    "95b0d837-97f7-4d96-9e97-f2985c829186": [
+    "91308835-9f11-4fa7-a296-647028af9cea": [
       {
         "type": "UserRegistered",
-        "aggregateId": "95b0d837-97f7-4d96-9e97-f2985c829186",
-        "timestamp": "2025-10-24T03:11:55.594Z",
+        "aggregateId": "91308835-9f11-4fa7-a296-647028af9cea",
+        "timestamp": "2025-10-24T03:21:51.481Z",
         "data": {
           "email": "multi-system-test@example.com",
           "password": "a-valid-password",
@@ -12,11 +12,23 @@
         }
       }
     ],
-    "71fb5dce-a76b-49ad-9a16-8c19ce999d63": [
+    "b295fc2d-06c3-4ee5-9efb-eacfa89d4d8f": [
       {
         "type": "UserRegistered",
-        "aggregateId": "71fb5dce-a76b-49ad-9a16-8c19ce999d63",
-        "timestamp": "2025-10-24T03:11:56.137Z",
+        "aggregateId": "b295fc2d-06c3-4ee5-9efb-eacfa89d4d8f",
+        "timestamp": "2025-10-24T03:21:51.984Z",
+        "data": {
+          "email": "trace-test@example.com",
+          "password": "a-valid-password",
+          "role": "customer"
+        }
+      }
+    ],
+    "d249fe15-f26e-46a8-82c3-cdcc876c3b69": [
+      {
+        "type": "UserRegistered",
+        "aggregateId": "d249fe15-f26e-46a8-82c3-cdcc876c3b69",
+        "timestamp": "2025-10-24T03:22:36.507Z",
         "data": {
           "email": "full-stack-test@example.com",
           "password": "a-secure-password",
@@ -24,11 +36,23 @@
         }
       }
     ],
-    "d404a02b-0021-4fc8-9a1b-5db655ff0d2c": [
+    "984270b8-6e4c-42a0-8c28-1fdcc8a8b8f0": [
       {
         "type": "UserRegistered",
-        "aggregateId": "d404a02b-0021-4fc8-9a1b-5db655ff0d2c",
-        "timestamp": "2025-10-24T03:11:56.322Z",
+        "aggregateId": "984270b8-6e4c-42a0-8c28-1fdcc8a8b8f0",
+        "timestamp": "2025-10-24T03:22:36.918Z",
+        "data": {
+          "email": "trace-test@example.com",
+          "password": "a-valid-password",
+          "role": "customer"
+        }
+      }
+    ],
+    "73f30eb1-50fc-4282-814f-a31b7a713950": [
+      {
+        "type": "UserRegistered",
+        "aggregateId": "73f30eb1-50fc-4282-814f-a31b7a713950",
+        "timestamp": "2025-10-24T03:22:37.126Z",
         "data": {
           "email": "cqrs-bus-test@example.com",
           "password": "a-strong-password",
