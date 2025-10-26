@@ -13,5 +13,19 @@
       "version": 1
     }
   ],
-  "subscribes": []
+  "subscribes": [],
+  "api": {
+    "endpoints": [
+      {
+        "path": "/users",
+        "method": "POST",
+        "description": "Registers a new user."
+      },
+      {
+        "path": "/users/:id",
+        "method": "DELETE",
+        "description": "Deactivates an existing user."
+      }
+    ]
+  }
 }

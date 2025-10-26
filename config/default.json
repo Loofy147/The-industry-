@@ -1,8 +1,13 @@
 {
+  "port": 3000,
+  "websocketPort": 8080,
+  "apiGatewayPort": 8081,
+  "dbPath": "./db/app_data.json",
   "api": {
     "timeout": 5000
   },
   "logging": {
     "level": "info"
-  }
+  },
+  "jwtSecret": "__JWT_SECRET__"
 }

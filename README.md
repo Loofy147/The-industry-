@@ -40,9 +40,22 @@ The application is organized into the following directories:
 - `tests`: Contains the automated tests for the application.
 - `GAP_REPORTS`: Contains reports on identified gaps and areas for improvement.
 
+## API Gateway
+
+The application now includes an API gateway, implemented with Express.js, that provides a single point of entry for all API requests. The API gateway is responsible for routing requests to the appropriate services, as well as for authentication and authorization.
+
 ## Monitoring and Management
 
 The application exposes several endpoints for monitoring and runtime management.
+
+### API Endpoints
+
+| Method | Path               | Description                  |
+| ------ | ------------------ | ---------------------------- |
+| `POST` | `/users`           | Registers a new user.        |
+| `DELETE` | `/users/:id`     | Deactivates an existing user.|
+| `POST` | `/notifications`   | Sends a test notification.   |
+| `GET`  | `/healthz`         | Health check endpoint.       |
 
 ### Control API (`/control`)
 
@@ -54,6 +67,10 @@ The Control API provides a set of endpoints for introspecting and managing the s
 -   `GET /control/message-bus/dlq`: Returns the contents of the dead letter queue.
 -   `GET /control/services`: Returns the discovered system architecture from the service registry.
 -   `POST /control/projectors/:name/replay`: Triggers a replay of events for a given projector.
+
+### Distributed Tracing
+
+The application is instrumented with OpenTelemetry for distributed tracing. Traces are exported to the console, allowing you to see the flow of requests as they travel through the system. Each trace is a collection of "spans," which represent individual units of work. By examining the traces, you can identify performance bottlenecks, debug issues across service boundaries, and understand the overall behavior of the system.
 
 ### Metrics (`/metrics`)
 

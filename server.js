@@ -27,8 +27,11 @@ eventStore.subscribeToAllEvents();
 const wsGateway = new WebSocketGateway(messageBus, config.websocketPort);
 
 // The start function will be called by the application's entry point.
+const { start: startApiGateway } = require('./src/api_gateway');
+
 const start = () => {
   wsGateway.start();
+  startApiGateway();
   server.listen(config.port, () => {
     console.log(`Frontend server running at http://localhost:${config.port}`);
   });

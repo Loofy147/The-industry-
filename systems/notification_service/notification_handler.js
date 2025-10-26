@@ -1,6 +1,7 @@
 const { emailService } = require('./email_service');
 const { Tracer } = require('../../src/observability');
 const { baseLogger } = require('../../src/structured_logger');
+const api = require('@opentelemetry/api');
 
 class NotificationHandler {
   constructor(messageBus) {
@@ -21,15 +22,20 @@ class NotificationHandler {
    * @param {object} event The UserRegistered event.
    */
   async _handleUserRegistered(event) {
-    const logger = baseLogger.child({ operationName: 'NotificationHandler.handleUserRegistered' });
-    logger.info(`Received UserRegistered event for ${event.data.email}`);
-    try {
-      await emailService.sendWelcomeEmail(event.data.email);
-      logger.info('Welcome email sent successfully.');
-    } catch (error) {
-      logger.error({ error: error.message }, 'Failed to send welcome email.');
-      throw error;
-    }
+    const tracer = api.trace.getTracer('notification-service');
+    return tracer.startActiveSpan('NotificationHandler._handleUserRegistered', async (span) => {
+      const logger = baseLogger.child({ operationName: 'NotificationHandler.handleUserRegistered' });
+      logger.info(`Received UserRegistered event for ${event.data.email}`);
+      try {
+        await emailService.sendWelcomeEmail(event.data.email);
+        logger.info('Welcome email sent successfully.');
+      } catch (error) {
+        logger.error({ error: error.message }, 'Failed to send welcome email.');
+        throw error;
+      } finally {
+        span.end();
+      }
+    });
   }
 }
 

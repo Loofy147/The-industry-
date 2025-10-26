@@ -1,6 +1,7 @@
 const { getContext, setContext, CorrelationContext } = require('./observability');
 const { schemaValidator } = require('./schema_validator');
 const { metricsService } = require('./metrics_service');
+const api = require('@opentelemetry/api');
 require('../schemas/user_registered'); // Ensure schemas are registered
 require('../schemas/user_deactivated'); // Ensure schemas are registered
 
@@ -39,34 +40,33 @@ class MessageBus {
    * @param {object} event The event to publish.
    */
   publish(topic, event) {
-    const context = getContext();
     const message = {
-      context: context ? { traceId: context.traceId, spanId: context.spanId } : null,
       payload: event,
+      meta: {},
     };
+    api.propagation.inject(api.context.active(), message.meta);
 
     console.log(`MessageBus: Publishing event to topic "${topic}"`, message.payload);
     metricsService.incrementCounter('message_bus_events_published_total', { topic });
 
-    const handlers = (this.subscriptions.get(topic) || []).concat(this.subscriptions.get('*') || []);
+    const handlers = new Set();
+    (this.subscriptions.get(topic) || []).forEach(h => handlers.add(h));
+    (this.subscriptions.get('*') || []).forEach(h => handlers.add(h));
 
     handlers.forEach(({ handler, schemaVersion }) => {
-      // --- Schema Validation ---
       const { valid, errors } = schemaValidator.validate(topic, schemaVersion, message.payload);
       if (!valid) {
         console.error(`MessageBus: Invalid event for topic "${topic}". Moving to DLQ.`, { errors });
         this.deadLetterQueue.push({ message, errors });
-        return; // Do not process invalid message
+        return;
       }
-      // --- End Validation ---
 
-      const parentContext = getContext();
-      const messageContext = message.context ? new CorrelationContext(message.context.traceId, message.context.spanId) : null;
-      setContext(messageContext);
+      const parentContext = api.propagation.extract(api.context.active(), message.meta);
+      const traceContext = api.trace.getSpan(parentContext)?.spanContext();
 
-      handler(message.payload);
-
-      setContext(parentContext);
+      api.context.with(parentContext, () => {
+        handler(message.payload);
+      });
     });
   }
 

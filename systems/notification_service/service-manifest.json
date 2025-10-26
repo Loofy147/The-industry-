@@ -8,5 +8,14 @@
       "schema": "UserRegistered",
       "version": 1
     }
-  ]
+  ],
+  "api": {
+    "endpoints": [
+      {
+        "path": "/notifications",
+        "method": "POST",
+        "description": "Sends a test notification."
+      }
+    ]
+  }
 }

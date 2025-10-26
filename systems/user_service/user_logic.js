@@ -7,6 +7,7 @@ const {
 const {
   baseLogger
 } = require('../../src/structured_logger');
+const api = require('@opentelemetry/api');
 const {
   RulesEngine
 } = require('../../src/rules_engine');
@@ -26,57 +27,65 @@ class UserLogic {
   }
 
   async _registerUser(email, password, role = 'customer') { // Add role parameter
-    const logger = baseLogger.child({
-      operationName: 'UserLogic.registerUser'
+    const tracer = api.trace.getTracer('user-service');
+    return tracer.startActiveSpan('UserLogic._registerUser', async (span) => {
+      const logger = baseLogger.child({
+        operationName: 'UserLogic.registerUser'
+      });
+      logger.info('Registering new user.');
+      const user = new User();
+      const event = user.registerUser({
+        email,
+        password,
+        role
+      }); // Pass role to aggregate
+      this.messageBus.publish(event.type, event);
+      logger.info('User registration event published.');
+      span.end();
+      return event.aggregateId;
     });
-    logger.info('Registering new user.');
-    const user = new User();
-    const event = user.registerUser({
-      email,
-      password,
-      role
-    }); // Pass role to aggregate
-    this.messageBus.publish(event.type, event);
-    logger.info('User registration event published.');
-    return event.aggregateId;
   }
 
   async _deactivateUser(userId) {
-    const logger = baseLogger.child({
-      operationName: 'UserLogic.deactivateUser'
-    });
-    logger.info('Deactivating user.');
-    const user = await this.userRepository.findById(userId);
-    if (!user) {
-      logger.error('User not found.');
-      throw new Error('User not found.');
-    }
-
-    // --- Business Rules Evaluation ---
-    const facts = {
-      user: {
-        id: user._id,
-        email: user.email,
-        isActive: user.isActive,
-        role: user.role
+    const tracer = api.trace.getTracer('user-service');
+    return tracer.startActiveSpan('UserLogic._deactivateUser', async (span) => {
+      const logger = baseLogger.child({
+        operationName: 'UserLogic.deactivateUser'
+      });
+      logger.info('Deactivating user.');
+      const user = await this.userRepository.findById(userId);
+      if (!user) {
+        logger.error('User not found.');
+        throw new Error('User not found.');
       }
-    };
-    const ruleResult = this.deactivationRulesEngine.evaluate(facts);
-    if (ruleResult.outcome === 'deny') {
-      logger.warn({
-        reason: ruleResult.reason
-      }, 'Deactivation denied by business rule.');
-      throw new Error(ruleResult.reason);
-    }
-    // --- End Evaluation ---
 
-    const event = user.deactivateUser({});
-    if (!event) {
-      logger.warn('User already deactivated.');
-      return null;
-    }
-    this.messageBus.publish(event.type, event);
-    logger.info('User deactivation event published.');
+      // --- Business Rules Evaluation ---
+      const facts = {
+        user: {
+          id: user._id,
+          email: user.email,
+          isActive: user.isActive,
+          role: user.role
+        }
+      };
+      const ruleResult = this.deactivationRulesEngine.evaluate(facts);
+      if (ruleResult.outcome === 'deny') {
+        logger.warn({
+          reason: ruleResult.reason
+        }, 'Deactivation denied by business rule.');
+        throw new Error(ruleResult.reason);
+      }
+      // --- End Evaluation ---
+
+      const event = user.deactivateUser({});
+      if (!event) {
+        logger.warn('User already deactivated.');
+        return null;
+      }
+      this.messageBus.publish(event.type, event);
+      logger.info('User deactivation event published.');
+      span.end();
+    });
   }
 }
 
