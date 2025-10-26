@@ -40,9 +40,22 @@ The application is organized into the following directories:
 - `tests`: Contains the automated tests for the application.
 - `GAP_REPORTS`: Contains reports on identified gaps and areas for improvement.
 
+## API Gateway
+
+The application now includes an API gateway that provides a single point of entry for all API requests. The API gateway is responsible for routing requests to the appropriate services, as well as for authentication and authorization.
+
 ## Monitoring and Management
 
 The application exposes several endpoints for monitoring and runtime management.
+
+### API Endpoints
+
+| Method | Path               | Description                  |
+| ------ | ------------------ | ---------------------------- |
+| `POST` | `/users`           | Registers a new user.        |
+| `DELETE` | `/users/:id`     | Deactivates an existing user.|
+| `POST` | `/notifications`   | Sends a test notification.   |
+| `GET`  | `/healthz`         | Health check endpoint.       |
 
 ### Control API (`/control`)
 
