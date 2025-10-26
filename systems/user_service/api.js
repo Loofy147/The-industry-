@@ -18,7 +18,10 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-router.delete('/:id', async (req, res, next) => {
+const { authorize } = require('../../src/auth');
+const adminOnly = authorize(['admin']);
+
+router.delete('/:id', adminOnly, async (req, res, next) => {
   const { id } = req.params;
   try {
     await userLogic.deactivateUser(id);

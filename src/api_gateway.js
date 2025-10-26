@@ -34,18 +34,11 @@ const authenticate = (req, res, next) => {
   next();
 };
 
-// Authorization middleware (placeholder)
-const authorize = (req, res, next) => {
-  if (req.user) {
-    next();
-  } else {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-};
+const { authorize } = require('./auth');
 
 // Protected routes
-app.use('/users', authenticate, authorize, require('../systems/user_service/api'));
-app.use('/notifications', authenticate, authorize, require('../systems/notification_service/api'));
+app.use('/users', authenticate, require('../systems/user_service/api'));
+app.use('/notifications', authenticate, authorize(), require('../systems/notification_service/api'));
 
 // 404 handler
 app.use((req, res, next) => {

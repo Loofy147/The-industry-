@@ -31,7 +31,7 @@ describe('Persistence Layer', () => {
   it('should persist events in the event store', () => {
     const messageBus = new MessageBus();
     const eventStore = new EventStore(messageBus, dbPath);
-    eventStore.subscribeToAllEvents();
+    messageBus.subscribe('TestEvent', eventStore._handleEvent.bind(eventStore));
 
     const testEvent = {
       type: 'TestEvent',

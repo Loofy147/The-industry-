@@ -8,13 +8,15 @@ let testPort;
 
 const { app } = require('../src/api_gateway');
 const { generateToken } = require('../src/auth');
+const { clear } = require('../src/config_loader');
 let authToken;
 
 describe('Integration Tests', () => {
   beforeAll(() => {
-    config.jwtSecret = 'test-secret-key';
+    clear();
+    process.env.JWT_SECRET = 'test-secret-key';
     request = supertest(app);
-    authToken = generateToken({ userId: 'test-user' });
+    authToken = generateToken({ userId: 'test-user', role: 'customer' });
   });
 
   it('should respond to the health check', async () => {
@@ -39,14 +41,26 @@ describe('Integration Tests', () => {
     expect(response.body).toEqual({ message: 'Welcome email sent.' });
   });
 
-  it('should deactivate a user', async () => {
+  it('should prevent a non-admin from deactivating a user', async () => {
     const registerResponse = await request.post('/users')
       .set('Authorization', `Bearer ${authToken}`)
-      .send({ email: 'test-deactivate@example.com', password: 'password' });
+      .send({ email: 'test-deactivate@example.com', password: 'password', role: 'customer' });
     const userId = registerResponse.body.userId;
 
     const deactivateResponse = await request.delete(`/users/${userId}`)
       .set('Authorization', `Bearer ${authToken}`);
+    expect(deactivateResponse.status).toBe(403);
+  });
+
+  it('should allow an admin to deactivate a user', async () => {
+    const adminToken = generateToken({ userId: 'admin-user', role: 'admin' });
+    const registerResponse = await request.post('/users')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({ email: 'test-deactivate-admin@example.com', password: 'password', role: 'customer' });
+    const userId = registerResponse.body.userId;
+
+    const deactivateResponse = await request.delete(`/users/${userId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
     expect(deactivateResponse.status).toBe(204);
   });
 });

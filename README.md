@@ -68,6 +68,10 @@ The Control API provides a set of endpoints for introspecting and managing the s
 -   `GET /control/services`: Returns the discovered system architecture from the service registry.
 -   `POST /control/projectors/:name/replay`: Triggers a replay of events for a given projector.
 
+### Distributed Tracing
+
+The application is instrumented with OpenTelemetry for distributed tracing. Traces are exported to the console, allowing you to see the flow of requests as they travel through the system. Each trace is a collection of "spans," which represent individual units of work. By examining the traces, you can identify performance bottlenecks, debug issues across service boundaries, and understand the overall behavior of the system.
+
 ### Metrics (`/metrics`)
 
 The application exposes a `/metrics` endpoint that provides real-time performance and health data in the Prometheus exposition format. This data can be scraped by a Prometheus server and used for monitoring, alerting, and dashboarding.

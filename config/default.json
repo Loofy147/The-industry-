@@ -9,5 +9,5 @@
   "logging": {
     "level": "info"
   },
-  "jwtSecret": "a-secure-default-secret-key"
+  "jwtSecret": "__JWT_SECRET__"
 }
