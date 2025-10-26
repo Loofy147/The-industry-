@@ -6,22 +6,15 @@ const getPort = require('get-port-cjs');
 let request;
 let testPort;
 
-const { start: startApiGateway } = require('../src/api_gateway');
+const { app } = require('../src/api_gateway');
 const { generateToken } = require('../src/auth');
-let apiGatewayServer;
 let authToken;
 
 describe('Integration Tests', () => {
-  beforeAll(async () => {
-    testPort = await getPort();
-    config.apiGatewayPort = testPort;
-    apiGatewayServer = startApiGateway();
-    request = supertest(`http://localhost:${testPort}`);
+  beforeAll(() => {
+    config.jwtSecret = 'test-secret-key';
+    request = supertest(app);
     authToken = generateToken({ userId: 'test-user' });
-  });
-
-  afterAll((done) => {
-    apiGatewayServer.close(done);
   });
 
   it('should respond to the health check', async () => {

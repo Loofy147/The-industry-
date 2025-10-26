@@ -1,42 +1,31 @@
+const express = require('express');
 const { UserLogic } = require('./user_logic');
 const { UserRepository } = require('../../src/user_repository');
 const { messageBus } = require('../../src/message_bus');
 const { eventStore } = require('../../src/event_store');
 
+const router = express.Router();
 const userRepository = new UserRepository(eventStore);
 const userLogic = new UserLogic(userRepository, messageBus);
 
-module.exports = (req, res) => {
-  if (req.method === 'POST') {
-    let body = '';
-    req.on('data', chunk => {
-      body += chunk.toString();
-    });
-    req.on('end', async () => {
-      const { email, password, role } = JSON.parse(body);
-      try {
-        const userId = await userLogic.registerUser(email, password, role);
-        res.writeHead(201, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ userId }));
-      } catch (error) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: error.message }));
-      }
-    });
-  } else if (req.method === 'DELETE') {
-    const userId = req.url.split('/')[2];
-    (async () => {
-      try {
-        await userLogic.deactivateUser(userId);
-        res.writeHead(204);
-        res.end();
-      } catch (error) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: error.message }));
-      }
-    })();
-  } else {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'Not Found' }));
+router.post('/', async (req, res, next) => {
+  const { email, password, role } = req.body;
+  try {
+    const userId = await userLogic.registerUser(email, password, role);
+    res.status(201).json({ userId });
+  } catch (error) {
+    next(error);
   }
-};
+});
+
+router.delete('/:id', async (req, res, next) => {
+  const { id } = req.params;
+  try {
+    await userLogic.deactivateUser(id);
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
+module.exports = router;

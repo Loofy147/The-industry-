@@ -42,7 +42,7 @@ The application is organized into the following directories:
 
 ## API Gateway
 
-The application now includes an API gateway that provides a single point of entry for all API requests. The API gateway is responsible for routing requests to the appropriate services, as well as for authentication and authorization.
+The application now includes an API gateway, implemented with Express.js, that provides a single point of entry for all API requests. The API gateway is responsible for routing requests to the appropriate services, as well as for authentication and authorization.
 
 ## Monitoring and Management
 

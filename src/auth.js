@@ -1,13 +1,13 @@
 const jwt = require('jsonwebtoken');
-const SECRET_KEY = 'your-secret-key'; // In a real app, use a more secure key and manage it properly
+const { config } = require('./config_loader');
 
 const generateToken = (payload) => {
-  return jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' });
+  return jwt.sign(payload, config.jwtSecret, { expiresIn: '1h' });
 };
 
 const verifyToken = (token) => {
   try {
-    return jwt.verify(token, SECRET_KEY);
+    return jwt.verify(token, config.jwtSecret);
   } catch (error) {
     return null;
   }
